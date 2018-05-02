@@ -16,6 +16,7 @@ function CSSPluginBase(compileCSS) {
 
     return Promise.resolve(compileCSS.call(loader, load.source, load.address, load.metadata.loaderOptions || {}))
     .then(function(result) {
+      Object.defineProperty(load.metadata, 'builder', { enumerable: false, value: loader.builder });
       load.metadata.style = result.css;
       load.metadata.styleSourceMap = result.map;
       if (result.moduleFormat)

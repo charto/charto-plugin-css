@@ -70,6 +70,7 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
 
   var inputFiles = {};
   cssLoads.forEach(function(load) {
+    loader.builder = load.metadata.builder;
     inputFiles[path.relative(baseURLPath, fromFileURL(load.address))] = {
       source: load.metadata.style,
       sourceMap: load.metadata.styleSourceMap
@@ -83,12 +84,31 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
   }
 
   var cwd = process.cwd();
+  var translate = loader.translate;
+
+  loader.translate = function(load) {
+    return translate.call(this, load).then(function() {
+      if(load.metadata.style) {
+        inputFiles[path.relative(baseURLPath, fromFileURL(load.address))] = {
+          source: load.metadata.style,
+          sourceMap: load.metadata.styleSourceMap
+        };
+        load.metadata.format = 'amd';
+      }
+    });
+  };
 
   var postCssPlugins = [atImport({
     resolve: function(fileName, dirname, opts) {
-      if (absUrl(fileName))
-        return fileName;
-      return path.relative(baseURLPath, path.join(dirname, fileName));
+      var resolved = fileName;
+      if (!absUrl(fileName)) {
+        fileName = path.join(dirname, fileName);
+        resolved = path.relative(baseURLPath, fileName);
+      }
+
+      return loader.import(fileName, module.id).then(function() {
+        return resolved;
+      });
     },
     load: function(fileName, opts) {
       if (absUrl(fileName))
@@ -157,6 +177,7 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
   })
   .then(function(result) {
     var cssOutput = result.css;
+    loader.translate = translate;
 
     // write a separate CSS file if necessary
     if (loader.separateCSS) {
