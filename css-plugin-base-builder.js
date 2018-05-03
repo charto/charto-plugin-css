@@ -55,6 +55,7 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
     return;
 
   var loader = this;
+  var importLoader;
 
   // backwards compat with fileURL for rootURL
   if (loader.rootURL && loader.rootURL.substr(0, 5) == 'file:')
@@ -70,7 +71,7 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
 
   var inputFiles = {};
   cssLoads.forEach(function(load) {
-    loader.builder = load.metadata.builder;
+    importLoader = load.metadata.loader;
     inputFiles[path.relative(baseURLPath, fromFileURL(load.address))] = {
       source: load.metadata.style,
       sourceMap: load.metadata.styleSourceMap
@@ -84,10 +85,11 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
   }
 
   var cwd = process.cwd();
-  var translate = loader.translate;
+  var oldTranslate = importLoader.translate;
+  var oldImport = importLoader.import;
 
-  loader.translate = function(load) {
-    return translate.call(this, load).then(function() {
+  importLoader.translate = function(load) {
+    return loader.translate.call(this, load).then(function() {
       if(load.metadata.style) {
         inputFiles[path.relative(baseURLPath, fromFileURL(load.address))] = {
           source: load.metadata.style,
@@ -98,6 +100,8 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
     });
   };
 
+  importLoader.import = loader.import;
+
   var postCssPlugins = [atImport({
     resolve: function(fileName, dirname, opts) {
       var resolved = fileName;
@@ -106,7 +110,7 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
         resolved = path.relative(baseURLPath, fileName);
       }
 
-      return loader.import(fileName, module.id).then(function() {
+      return importLoader.import(fileName, module.id).then(function() {
         return resolved;
       });
     },
@@ -177,7 +181,9 @@ exports.bundle = function(loads, compileOpts, outputOpts) {
   })
   .then(function(result) {
     var cssOutput = result.css;
-    loader.translate = translate;
+
+    importLoader.translate = oldTranslate;
+    importLoader.import = oldImport;
 
     // write a separate CSS file if necessary
     if (loader.separateCSS) {
