@@ -1,21 +1,27 @@
 {
-  "name": "systemjs-plugin-css",
+  "name": "charto-plugin-css",
   "version": "0.1.37",
-  "main": "css",
-  "registry": "jspm",
+  "description": "CSS loader plugin for SystemJS",
+  "main": "css.js",
   "scripts": {
-    "test": "mocha --harmony test/test.js",
-    "build": "cd build-post-css && npm run build",
-    "phantom-test": "phantomjs test/phantom.js"
+    "build": "cd build-post-css && npm run build"
   },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/charto/charto-plugin-css.git"
+  },
+  "bugs": {
+    "url": "https://github.com/charto/charto-plugin-css/issues"
+  },
+  "homepage": "https://github.com/charto/charto-plugin-css#readme",
+  "keywords": [
+    "systemjs",
+    "loader",
+    "css"
+  ],
   "devDependencies": {
-    "chai": "^3.5.0",
-    "chai-as-promised": "^5.3.0",
-    "mocha": "^2.4.5",
-    "mocha-phantomjs": "^4.0.2",
-    "sinon": "^1.17.4",
-    "sinon-chai": "^2.8.0",
-    "systemjs": "^0.19.28",
-    "systemjs-builder": "^0.15.17"
+    "systemjs": "^0.21.4",
+    "systemjs-builder": "^0.16.13"
   }
 }
